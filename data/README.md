@@ -2,7 +2,7 @@
 
 <!-- Enable when README.ar.md is available: [اقرأ بالعربي 🇸🇦](README.ar.md) -->
 
-This directory contains the initial historical Arabic corpus for a project adapting a Qwen language model to nineteenth-century writing and perspectives. Curation is part of the research. Which texts are included, whose voices they represent, and what is removed can all affect the resulting model.
+This directory contains the initial historical Arabic corpus for a project adapting a  language model to nineteenth-century writing and perspectives. Curation is part of the research. Which texts are included, whose voices they represent, and what is removed can all affect the resulting model.
 
 The collection is a small, deliberately selected starting point. It is not a representative sample of all Arabic writing or Arabic-speaking communities in the nineteenth century.
 

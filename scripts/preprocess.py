@@ -19,6 +19,7 @@ def clean_book(text: str, book_id: str ) -> str:
     PAGE_NUMBER_PATTERN = r"\(ص\s*[\u0660-\u0669]+(?:\s*،\s*[\u0660-\u0669]+)*\s*\)"
     FOOTNOTE_MARKER_PATTERN = r"(?<=[ء-يً-ْٰ.،؛:!?؟»)])[\u0660-\u0669]+"
     FOOTNOTE_LINE_PATTERN = r"^[\u0660-\u0669]+\s+"
+    BIDIRECTIONAL_CONTROL_PATTERN = r"[\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]"
 
     
     lines = text.splitlines()
@@ -27,6 +28,7 @@ def clean_book(text: str, book_id: str ) -> str:
 
 
     for line in lines:
+        line = re.sub(BIDIRECTIONAL_CONTROL_PATTERN, "", line)
         line = line.strip()
 
         
@@ -90,7 +92,7 @@ def main():
     from argparse import ArgumentParser
 
     parser = ArgumentParser(description='Clean historical Arabic texts using document-specific rules'
-                             'تخليص الإبريز في تلخيص باريز ')
+                             'تنظيف النصوص العربية التاريخية باستخدام قواعد مخصصة لكل وثيقة" ')
     
     parser.add_argument('infile', help="Input text file")
     parser.add_argument('outfile', help="Output text file")
