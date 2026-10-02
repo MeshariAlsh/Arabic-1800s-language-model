@@ -1,5 +1,5 @@
 <p align="left">
-  <a href="README.ar.mdmd"><img src="https://img.shields.io/badge/lang-Arabic-1f6feb?style=for-the-badge" alt="Arabic"></a>
+  <a href="README.ar.md"><img src="https://img.shields.io/badge/lang-Arabic-1f6feb?style=for-the-badge" alt="Arabic"></a>
 </p>
 
 # Nineteenth-Century(1800s) Arabic Language Model
