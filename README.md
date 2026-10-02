@@ -1,3 +1,7 @@
+<p align="left">
+  <a href="README.ar.mdmd"><img src="https://img.shields.io/badge/lang-Arabic-1f6feb?style=for-the-badge" alt="Arabic"></a>
+</p>
+
 # Nineteenth-Century(1800s) Arabic Language Model
 
 An independent, academically motivated project exploring how an existing language model can be adapted to nineteenth-century Arabic writing styles and historically situated perspectives, beliefs, and biases.
