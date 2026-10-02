@@ -2,19 +2,28 @@ import os
 import re 
 
 BOOK_RULES = {
-    "book_001": {
+    "book-001": {
         "start": ["المقدمة"],
         "end": ["تعليق"],
+        "remove_footnote_lines": True,
     },
     "newspaper-001": {
         "start": ["فاتحة الجريدة"],
         "end": ["(تمت كلمات «العروة الوثقى» بفضل الله.)"],
+        "remove_footnote_lines": True,
+    },
+
+    "book-004": {
+        "start": ["خُطبة الكتاب"],
+        "end": [],
+        "remove_footnote_lines": False,
     },
 }
 
 def clean_book(text: str, book_id: str ) -> str:
     START_MARKERS = BOOK_RULES[book_id]["start"]
     END_MARKERS = BOOK_RULES[book_id]["end"]
+    REMOVE_FOOTNOTE_LINES = BOOK_RULES[book_id]["remove_footnote_lines"]
 
     PAGE_NUMBER_PATTERN = r"\(ص\s*[\u0660-\u0669]+(?:\s*،\s*[\u0660-\u0669]+)*\s*\)"
     FOOTNOTE_MARKER_PATTERN = r"(?<=[ء-يً-ْٰ.،؛:!?؟»)])[\u0660-\u0669]+"
@@ -30,7 +39,6 @@ def clean_book(text: str, book_id: str ) -> str:
     for line in lines:
         line = re.sub(BIDIRECTIONAL_CONTROL_PATTERN, "", line)
         line = line.strip()
-
         
         # تجاوز الأسطر حتى تصل إلى أحد عناوين البداية.
         # Skip lines until a start heading is found.
@@ -52,7 +60,7 @@ def clean_book(text: str, book_id: str ) -> str:
 
         # تجاوز الأسطر التي تبدأ بأرقام عربية متبوعة بمسافة بيضاء.
         # Skip lines starting with Arabic digits followed by whitespace.
-        if re.search(FOOTNOTE_LINE_PATTERN, line):
+        if REMOVE_FOOTNOTE_LINES and re.search(FOOTNOTE_LINE_PATTERN, line):
             continue
 
         # أزل الأنماط غير المرغوبة من داخل السطر الحالي.
