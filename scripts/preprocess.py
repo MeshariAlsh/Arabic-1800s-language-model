@@ -98,6 +98,7 @@ def main():
     """
 
     from argparse import ArgumentParser
+    from pathlib import Path
 
     parser = ArgumentParser(description='Clean historical Arabic texts using document-specific rules'
                              'تنظيف النصوص العربية التاريخية باستخدام قواعد مخصصة لكل وثيقة" ')
@@ -109,7 +110,8 @@ def main():
     try:
         with open (args.infile, "r", encoding='utf-8') as infile: 
             text = infile.read()
-            clean_text = clean_book(text, "newspaper-001")
+            book_id = Path(args.infile).stem
+            clean_text = clean_book(text, book_id)
             print(f"Word count: {len(clean_text.split()):,}")
         
         with open(args.outfile, "w", encoding="utf-8") as outfile:
