@@ -23,21 +23,23 @@ The model is an experimental historical simulation. Its responses are generated 
 The project aims to document source provenance, reuse permissions, dataset selection, and preprocessing decisions. Any public demonstration will clearly identify the model as a simulation and explain its limitations.
 
 ## Initial corpus
+- Book One (Published 1834)
+  - Approximately 62,000 cleaned words
 
-* Book One (Published 1834)
-* Approximately 62,000 cleaned words
+- Book Two (Published 1895)
+  - Approximately 47,873 cleaned words
 
-* Book Two (Published 1895)
-* Approximately 47,873 cleaned words
+- Book Three (Published 1857)
+  - Approximately 102,506 cleaned words
 
-* Book Three (Published 1857)
-* Approximately 102,506 cleaned words
+- Newspaper One (Published 1884)
+  - Approximately 95,822 cleaned words
 
-* Newspaper One (Published 1884)
-* Approximately 95,822 cleaned words
+- Book Four (Published 1891)
+  
+  - 242,874 cleaned words
 
-
-* Total approximately cleaned 308,201 words 
+**Total: approximately 551,075 cleaned words.**
 
 ## Long-term goal
 
