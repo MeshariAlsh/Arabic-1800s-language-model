@@ -18,17 +18,47 @@ BOOK_RULES = {
         "end": [],
         "remove_footnote_lines": False,
     },
+
+    "book-005": {
+            "start": ["حال الكون"],
+            "end": [],
+            "remove_footnote_lines": True,
+        },
+
+    "book-006": {
+                "start": ["بسم الله الرحمن الرحيم"],
+                "end": [],
+                "remove_footnote_lines": False,
+            },
+
+    "book-007": {
+                    "start": ["الفاتحة"],
+                    "end": [],
+                    "remove_footnote_lines": False,
+                    "remove_volume_page_lines": True,
+                },
+
+    "book-008": {
+                        "start": [],
+                        "start_prefix": ["إنني بينما كنت ذات ليلة ضاربًا في أودية"],
+                        "end": ["حول هذه النسخة الرقمية"],
+                        "remove_footnote_lines": False,
+                        "remove_volume_page_lines": True,
+                    },
 }
 
 def clean_book(text: str, book_id: str ) -> str:
-    START_MARKERS = BOOK_RULES[book_id]["start"]
-    END_MARKERS = BOOK_RULES[book_id]["end"]
-    REMOVE_FOOTNOTE_LINES = BOOK_RULES[book_id]["remove_footnote_lines"]
+    START_MARKERS = BOOK_RULES[book_id].get("start", [])
+    END_MARKERS = BOOK_RULES[book_id].get("end", [])
+    REMOVE_FOOTNOTE_LINES =  BOOK_RULES[book_id].get("remove_footnote_lines", False)
+    REMOVE_VOLUME_PAGE_LINES = BOOK_RULES[book_id].get("remove_volume_page_lines", False)
+    START_PREFIXES = BOOK_RULES[book_id].get("start_prefix", [])
 
     PAGE_NUMBER_PATTERN = r"\(ص\s*[\u0660-\u0669]+(?:\s*،\s*[\u0660-\u0669]+)*\s*\)"
     FOOTNOTE_MARKER_PATTERN = r"(?<=[ء-يً-ْٰ.،؛:!?؟»)])[\u0660-\u0669]+"
     FOOTNOTE_LINE_PATTERN = r"^[\u0660-\u0669]+\s+"
     BIDIRECTIONAL_CONTROL_PATTERN = r"[\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]"
+    VOLUME_PAGE_LINE_PATTERN = r"^الجزء:\s*\d+\s*¦\s*الصفحة:\s*\d+\s*$"
 
     
     lines = text.splitlines()
@@ -42,10 +72,13 @@ def clean_book(text: str, book_id: str ) -> str:
         
         # تجاوز الأسطر حتى تصل إلى أحد عناوين البداية.
         # Skip lines until a start heading is found.
-        if not started: 
-            if line in START_MARKERS:
-                started = True
-            else: 
+        if not started:
+            if (
+                line in START_MARKERS
+                or any(line.startswith(prefix) for prefix in START_PREFIXES)
+                ):
+                    started = True
+            else:
                 continue
 
         # توقّف عند الوصول إلى إحدى علامات النهاية.
@@ -56,6 +89,11 @@ def clean_book(text: str, book_id: str ) -> str:
         # تجاوز الأسطر الزخرفية المستقلة.
         # Skip standalone decorative lines.
         if line in {"•••", "* * *"}:
+            continue
+
+        # تجاوز الأسطر التي تحتوي على بيانات الجزء والصفحة فقط.
+        # Skip volume/page metadata.
+        if REMOVE_VOLUME_PAGE_LINES and re.fullmatch(VOLUME_PAGE_LINE_PATTERN, line):
             continue
 
         # تجاوز الأسطر التي تبدأ بأرقام عربية متبوعة بمسافة بيضاء.
@@ -82,7 +120,10 @@ def clean_book(text: str, book_id: str ) -> str:
         output.append(line)
 
     if not started:
-        raise ValueError(f"Could not find a start heading: {START_MARKERS}")
+        raise ValueError(
+            f"Could not find a start marker for {book_id}: "
+            f"headings={START_MARKERS}, prefixes={START_PREFIXES}"
+        )
 
     clean_text = "\n".join(output)
 
