@@ -36,10 +36,27 @@ The project aims to document source provenance, reuse permissions, dataset selec
   - Approximately 95,822 cleaned words
 
 - Book Four (Published 1891)
-  
-  - 242,874 cleaned words
+  - Approximately 242,874 cleaned words
 
-**Total: approximately 551,075 cleaned words.**
+- Book Four (Published 1891)
+  - Approximately 242,874 cleaned words
+
+- Book Five (Published 1881)
+  - Approximately 23,586 cleaned words
+
+- Book Six (Published 1866)
+  - Approximately 102,211 cleaned words
+
+- Magazine One (Published 1892)
+  - Approximately 221,395 cleaned words
+
+- Book Eight (Published 1865)
+  - Approximately 25,784 cleaned words
+
+- Book Nine (Published 1897)
+  - Approximately 109,480 cleaned words
+
+**Total: approximately 1,033,531 cleaned words across nine books and one newspaper collection.**
 
 ## Long-term goal
 

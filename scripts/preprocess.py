@@ -31,7 +31,7 @@ BOOK_RULES = {
                 "remove_footnote_lines": False,
             },
 
-    "book-007": {
+    "Magazine-001": {
                     "start": ["الفاتحة"],
                     "end": [],
                     "remove_footnote_lines": False,
@@ -45,6 +45,14 @@ BOOK_RULES = {
                         "remove_footnote_lines": False,
                         "remove_volume_page_lines": True,
                     },
+
+     "book-009": {
+                            "start": ["الجزء الأول"],
+                            "start_prefix": [],
+                            "end": [],
+                            "remove_footnote_lines": False,
+                            "remove_volume_page_lines": False,
+                        },
 }
 
 def clean_book(text: str, book_id: str ) -> str:
