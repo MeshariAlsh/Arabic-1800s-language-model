@@ -16,11 +16,15 @@ venv/
 .DS_Store
 
 # Datasets (published on Hugging Face)
-data/raw/*
-!data/raw/.gitkeep
-data/clean/*
-!data/clean/.gitkeep
-data/splits/*
-!data/splits/.gitkeep
-data/SFT/*
-!data/SFT/.gitkeep
+data/raw/**
+!data/raw/**/
+!data/raw/**/.gitkeep
+data/clean/**
+!data/clean/**/
+!data/clean/**/.gitkeep
+data/splits/**
+!data/splits/**/
+!data/splits/**/.gitkeep
+data/SFT/**
+!data/SFT/**/
+!data/SFT/**/.gitkeep
