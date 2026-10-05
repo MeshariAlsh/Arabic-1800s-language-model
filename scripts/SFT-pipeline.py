@@ -1,3 +1,53 @@
+MIN_WORDS = 100   # smallest passage size
+MAX_WORDS = 300   # largest passage size
+
+
+def split_book(text: str) -> list[str]:
+    """ Arabic: تقسيم نص التدريب إلى مقاطع من ١٠٠ إلى ٣٠٠ كلمة عند حدود الأسطر.
+        English: Split a training text into passages of 100 to 300 words at line boundaries.
+    """
+
+    passages = []
+    buffer = []    # lines collected for the current passage
+    count = 0      # words in the buffer
+
+    # قسِّم النص إلى أسطر غير فارغة.
+    # Split the text into non-empty lines.
+    lines = [line.strip() for line in text.split("\n") if line.strip()]
+    if not lines:
+        raise ValueError("No text found in the input file")
+
+    for line in lines:
+        words = len(line.split())
+
+        # تجاوز السطر الأطول من الحد الأقصى، وابدأ مقطعًا جديدًا.
+        # Skip a line longer than the maximum, and start a new passage.
+        if words > MAX_WORDS:
+            buffer = []
+            count = 0
+            continue
+
+        # إن تجاوز المقطع الحد الأقصى بإضافة هذا السطر، فابدأ من جديد.
+        # If adding this line would pass the maximum, start again.
+        if count + words > MAX_WORDS:
+            buffer = []
+            count = 0
+
+        # أضف السطر إلى المقطع الحالي.
+        # Add the line to the current passage.
+        buffer.append(line)
+        count += words
+
+        # احفظ المقطع حين يبلغ الحد الأدنى، وابدأ مقطعًا جديدًا.
+        # Save the passage once it reaches the minimum, and start a new one.
+        if count >= MIN_WORDS:
+            passages.append("\n".join(buffer))
+            buffer = []
+            count = 0
+
+    return passages
+
+
 def main():
     """ Arabic: واجهة سطر الأوامر لهذه الوحدة البرمجية.
         English: Command-line interface to the module.
