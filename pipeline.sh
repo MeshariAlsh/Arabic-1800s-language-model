@@ -30,3 +30,19 @@ passages() {
 }
  
 # --- Stage 3: passages -> conversations (not built yet) ---------------------
+
+conversations() {
+    for f in data/SFT/passages/*.jsonl; do
+           $PYTHON scripts/SFT/generate-conversations.py "$f" data/SFT/conversations
+    done
+}
+
+
+case "$1" in
+    splits)    splits ;;
+    passages)  passages ;;
+    *)
+        echo "Usage: ./pipeline.sh {splits|passages}"
+        exit 1
+        ;;
+esac
