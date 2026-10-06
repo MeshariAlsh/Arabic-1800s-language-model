@@ -25,7 +25,7 @@ splits() {
 # --- Stage 2: train -> passages ----------------------------------------------
 passages() {
     for f in data/splits/train/*.txt; do
-        $PYTHON scripts/SFT-pipeline.py "$f" data/SFT/passages
+           $PYTHON scripts/SFT/make-passages.py "$f" data/SFT/passages
     done
 }
  
