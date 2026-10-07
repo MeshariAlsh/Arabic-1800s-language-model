@@ -3,6 +3,9 @@ from openai import OpenAI
 import json
 from argparse import ArgumentParser
 import os
+import random
+from pathlib import Path
+from openai import APIError
 
 load_dotenv()        # reads .env and sets OPENAI_API_KEY for this script
 
@@ -25,6 +28,7 @@ Rules:
 4. Do not mention the book, the author's name, or any fact that is not in the passage.
 5. Vary the questions. Use direct questions, requests to describe something, and requests for an opinion.
 6. Do not reuse distinctive words or phrases from the reply in the question. Ask the way a curious visitor would, in plain words.
+7. Each reply must make sense on its own. Do not start a reply with a word that refers to something you left out, such as a pronoun or a word like "because", "then", or "the first", unless what it refers to is in an earlier reply.
 
 
 Output only JSON in this form:
@@ -36,7 +40,7 @@ def ask_llm(passage: str) -> str:
         English: Send a passage to the model and return its reply as text.
     """
     client = OpenAI(api_key=OPENAI_API_KEY)
-    
+
     response = client.chat.completions.create(
         model=MODEL,
         messages=[
@@ -67,6 +71,9 @@ def norm(s: str) -> str:
     return " ".join(s.split())
 
 
+REPORTED_SPEECH = ("فقال", "فقالت", "قال", "قالت", "وقال", "وقالت")
+END_PUNCTUATION = ".،؛:!؟?"
+
 def verify(turns: list[dict], passage: str) -> str | None:
     """ Arabic: التحقق من المحادثة، وإرجاع None إن نجحت أو سبب الرفض إن فشلت.
         English: Check the conversation. Return None if it passes, or the reason it failed.
@@ -76,39 +83,87 @@ def verify(turns: list[dict], passage: str) -> str | None:
         return "roles do not alternate"
     if not 2 <= len(turns) // 2 <= 4:
         return "wrong number of exchanges"
+
     for t in turns:
-        if t.get("role") == "assistant" and norm(t.get("content", "")) not in norm(passage):
+        if t.get("role") != "assistant":
+            continue
+        content = norm(t.get("content", ""))
+
+        # ارفض الرد الذي ينتهي في منتصف الكلام.
+        # Reject a reply that ends mid-sentence.
+        if content.endswith(":"):
+            return "reply ends mid-sentence"
+
+        # ارفض الرد الذي ينقل كلام غير الكاتب.
+        # Reject a reply that reports someone else's speech.
+        if content.startswith(REPORTED_SPEECH):
+            return "reply is reported speech"
+
+        # تجاهل علامة الترقيم الأخيرة فقط عند المقارنة.
+        # Ignore only the final punctuation mark when comparing.
+        core = content.rstrip(END_PUNCTUATION + " ")
+        if core not in norm(passage):
             return "assistant reply not verbatim"
+
     return None
+
+def looks_like_list(passage: str) -> bool:
+    """ Arabic: هل المقطع قائمة (أسطر قصيرة) لا نصًّا متصلًا؟
+        English: Is the passage a list of short lines rather than running text?
+    """
+    lines = passage.split("\n")
+    avg = sum(len(line.split()) for line in lines) / len(lines)
+    return avg < MIN_AVG_WORDS
 
 def main():
     parser = ArgumentParser(description="Generate SFT conversations from passages.")
-    parser.add_argument("infile", help="Passages file, e.g. data/SFT/passages/passages-book-004.jsonl")
+    parser.add_argument("infile", help="Passages file, e.g. data/SFT/passages/passages-book-006.jsonl")
+    parser.add_argument("outdir", help="Folder for the results, e.g. data/SFT/conversations")
+    parser.add_argument("--n", type=int, default=5, help="How many passages to sample")
+    parser.add_argument("--seed", type=int, default=42, help="Random seed for sampling")
     args = parser.parse_args()
 
-    # اقرأ مقطعًا من وسط الكتاب للتجربة.
-    # Read one passage from the middle of the book, as a test.
+    outdir = Path(args.outdir)
+    outdir.mkdir(parents=True, exist_ok=True)
+
+    # اقرأ كل المقاطع، واستبعد القوائم، ثم اختر عيّنة ثابتة.
+    # Read all passages, drop list-like ones, then pick a fixed sample.
     with open(args.infile, encoding="utf-8") as f:
-        lines = f.readlines()
-    sample = json.loads(lines[200])
+        records = [json.loads(line) for line in f]
+    usable = [r for r in records if not looks_like_list(r["passage"])]
+    picked = random.Random(args.seed).sample(usable, min(args.n, len(usable)))
+    print(f"{len(records)} passages, {len(records) - len(usable)} list-like dropped, {len(picked)} sampled")
 
-    print("PASSAGE:\n", sample["passage"], "\n")
-    raw = ask_llm(sample["passage"])
-    print("REPLY:\n", raw)
+    passed = failed = skipped = 0
+    for r in picked:
+        # اطلب الرد، وإن فشل الاتصال فتجاوز المقطع دون حفظ شيء.
+        # Ask for the reply. If the API call fails, skip the passage without saving anything.
+        try:
+            raw = ask_llm(r["passage"])
+        except APIError as e:
+            print(f"{r['id']}: API error, skipped ({e})")
+            skipped += 1
+            continue
 
-    turns = parse(raw)
-    print("\nPARSED:", "failed" if turns is None else f"{len(turns)} turns")
-    if turns is not None:
-        print("VERIFY:", verify(turns, sample["passage"]) or "passed")
+        # حوِّل الرد وتحقَّق منه.
+        # Parse the reply and verify it.
+        turns = parse(raw)
+        reason = "invalid JSON" if turns is None else verify(turns, r["passage"])
 
-        # اختبار مؤقت: غيِّر حرفًا واحدًا وتأكد أن التحقق يرفضه. احذفه بعد التجربة.
-        # Temporary test: change one letter and check that verify rejects it. Remove after testing.
-        tampered = [dict(t) for t in turns]
-        for t in tampered:
-            if t["role"] == "assistant":
-                t["content"] = t["content"].replace("ا", "أ", 1)   # change one letter
-                break
-        print("TAMPERED VERIFY:", verify(tampered, sample["passage"]) or "passed")
+        # احفظ الناجح والمرفوض كلًّا في ملفه.
+        # Save passes and failures to their own files.
+        record = {**r, "model": MODEL, "turns": turns, "reason": reason}
+        name = "conversations.jsonl" if reason is None else "rejected.jsonl"
+        with open(outdir / name, "a", encoding="utf-8") as f:
+            f.write(json.dumps(record, ensure_ascii=False) + "\n")
+
+        if reason is None:
+            passed += 1
+        else:
+            failed += 1
+        print(f"{r['id']}: {reason or 'passed'}")
+
+    print(f"\n{passed} passed, {failed} rejected, {skipped} skipped")
 
 if __name__ == "__main__":
     main()
