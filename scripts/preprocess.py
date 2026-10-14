@@ -67,6 +67,7 @@ def clean_book(text: str, book_id: str ) -> str:
     FOOTNOTE_LINE_PATTERN = r"^[\u0660-\u0669]+\s+"
     BIDIRECTIONAL_CONTROL_PATTERN = r"[\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]"
     VOLUME_PAGE_LINE_PATTERN = r"^الجزء:\s*\d+\s*¦\s*الصفحة:\s*\d+\s*$"
+    BRACKET_FOOTNOTE_PATTERN = r"\[\d+\]"
 
     
     lines = text.splitlines()
@@ -109,10 +110,16 @@ def clean_book(text: str, book_id: str ) -> str:
         if REMOVE_FOOTNOTE_LINES and re.search(FOOTNOTE_LINE_PATTERN, line):
             continue
 
+        # تجاوز أسطر الحواشي التي تبدأ بسهم.
+        # Skip footnote lines that start with an arrow.
+        if line.startswith("↑"):
+            continue
+
         # أزل الأنماط غير المرغوبة من داخل السطر الحالي.
         # Clean fragments inside the current line.
         line = re.sub(PAGE_NUMBER_PATTERN, "", line)
         line = re.sub(FOOTNOTE_MARKER_PATTERN, "", line)
+        line = re.sub(BRACKET_FOOTNOTE_PATTERN, "", line)
 
         # اختزل المسافات وعلامات الجدولة المتتابعة إلى مسافة واحدة.
         # Collapse repeated spaces and tabs.
