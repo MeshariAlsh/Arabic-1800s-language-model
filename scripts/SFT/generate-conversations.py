@@ -6,6 +6,7 @@ import os
 import random
 from pathlib import Path
 from openai import APIError
+import re
 
 load_dotenv()        # reads .env and sets OPENAI_API_KEY for this script
 
@@ -15,7 +16,12 @@ if not OPENAI_API_KEY:
 
 
 MODEL = "gpt-6-luna"   # exact model ID from the OpenAI platform
-MIN_AVG_WORDS = 12          
+MIN_AVG_WORDS = 12
+
+REPORTED_SPEECH = ("فقال", "فقالت", "قال", "قالت", "وقال", "وقالت")
+END_PUNCTUATION = ".،؛:!؟?"
+QURANIC_MARKS = re.compile(r"[\u06D6-\u06ED]")    # Quranic recitation marks such as ۖ and ۚ
+
 
 SYSTEM_PROMPT = """You turn passages from nineteenth-century Arabic texts into short conversations.
 
@@ -29,6 +35,9 @@ Rules:
 5. Vary the questions. Use direct questions, requests to describe something, and requests for an opinion.
 6. Do not reuse distinctive words or phrases from the reply in the question. Ask the way a curious visitor would, in plain words.
 7. Each reply must make sense on its own. Do not start a reply with a word that refers to something you left out, such as a pronoun or a word like "because", "then", or "the first", unless what it refers to is in an earlier reply.
+8. The visitor speaks directly to the author. Always address him as "you", never as "he".
+9. Do not use any part of the passage that quotes the Quran. Leave those parts unused.
+10. Do not use sentences that refer to the structure of the text itself, such as "as mentioned above", "let us return to our subject", or "there remains for us to discuss".
 
 
 Output only JSON in this form:
@@ -71,9 +80,6 @@ def norm(s: str) -> str:
     return " ".join(s.split())
 
 
-REPORTED_SPEECH = ("فقال", "فقالت", "قال", "قالت", "وقال", "وقالت")
-END_PUNCTUATION = ".،؛:!؟?"
-
 def verify(turns: list[dict], passage: str) -> str | None:
     """ Arabic: التحقق من المحادثة، وإرجاع None إن نجحت أو سبب الرفض إن فشلت.
         English: Check the conversation. Return None if it passes, or the reason it failed.
@@ -88,6 +94,11 @@ def verify(turns: list[dict], passage: str) -> str | None:
         if t.get("role") != "assistant":
             continue
         content = norm(t.get("content", ""))
+
+        # ارفض الرد الذي يحتوي على نص قرآني.
+        # Reject a reply that contains Quranic text.
+        if QURANIC_MARKS.search(content):
+            return "reply quotes the Quran"
 
         # ارفض الرد الذي ينتهي في منتصف الكلام.
         # Reject a reply that ends mid-sentence.
