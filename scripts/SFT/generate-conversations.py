@@ -38,7 +38,7 @@ Rules:
 8. The visitor speaks directly to the author. Always address him as "you", never as "he".
 9. Do not use any part of the passage that quotes the Quran. Leave those parts unused.
 10. Do not use sentences that refer to the structure of the text itself, such as "as mentioned above", "let us return to our subject", or "there remains for us to discuss".
-
+11. Each reply must end at the end of a sentence, not at a comma or semicolon.
 
 Output only JSON in this form:
 {"turns": [{"role": "user", "content": "..."}, {"role": "assistant", "content": "..."}]}"""
@@ -102,7 +102,7 @@ def verify(turns: list[dict], passage: str) -> str | None:
 
         # ارفض الرد الذي ينتهي في منتصف الكلام.
         # Reject a reply that ends mid-sentence.
-        if content.endswith(":"):
+        if content.endswith((":", "،", "؛")):
             return "reply ends mid-sentence"
 
         # ارفض الرد الذي ينقل كلام غير الكاتب.

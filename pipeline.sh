@@ -37,11 +37,17 @@ conversations() {
     done
 }
 
+# --- Stage 4: conversations -> SFT train / validation files ---
+export_sft() {
+    $PYTHON scripts/SFT/export-sft.py data/SFT/conversations/conversations.jsonl data/SFT/sft_training
+}
+
 
 case "$1" in
     splits)    splits ;;
     passages)  passages ;;
     conversations)  conversations ;;
+    export)          export_sft ;;
     *)
         echo "Usage: ./pipeline.sh {splits|passages}"
         exit 1
